@@ -1,29 +1,165 @@
-import React, { useState } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { FaUser, FaClipboardList, FaDownload, FaMapMarkerAlt, FaSignOutAlt } from 'react-icons/fa';
 import { RiDashboardLine } from 'react-icons/ri';
 
 const MyAccount = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
-  // eslint-disable-next-line no-unused-vars
   const [userInfo, setUserInfo] = useState({
-    image: 'src/assets/user-02.jpg',
-    name: 'James Septimal',
-    email: 'james@example.com',
-    memberSince: 'Sep 2020'
+    image: '/images/user-02.jpg',
+    name: '',
+    email: '',
+    memberSince: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
   });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [showConfirmForm, setShowConfirmForm] = useState(false);
+  const [passwords, setPasswords] = useState({
+    current: '',
+    new: '',
+    confirm: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/sign-in');
+      return;
+    }
+
+    // Update userInfo with logged-in user data
+    setUserInfo(prevInfo => ({
+      ...prevInfo,
+      email: user.email,
+      name: user.name || user.email.split('@')[0],
+    }));
+  }, [user, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/sign-in');
+  };
+
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    if (passwords.new !== passwords.confirm) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+    // Here you would typically make an API call to update the password
+    console.log('Password updated');
+    setShowPasswordForm(false);
+    setPasswords({ current: '', new: '', confirm: '' });
+    setPasswordError('');
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return (
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold mb-4 ">Dashboard</h3>
+            <h3 className="text-xl font-semibold mb-4">Dashboard</h3>
             <p className="text-gray-600">
-              Hello {userInfo.name} (not {userInfo.name}? <button className="text-red-500 hover:text-red-600 cursor-pointer">Log Out</button>)
+              Hello {userInfo.name} (not {userInfo.name}? <button className="text-red-500 hover:text-red-600 cursor-pointer" onClick={handleLogout}>Log Out</button>)
             </p>
-            <p className="text-gray-600">
-              From your account dashboard you can view your recent orders, manage your shipping and billing addresses, and edit your password and account details.
-            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <button
+                onClick={() => {
+                  setShowPasswordForm(false);
+                  setShowConfirmForm(false);
+                  setShowUpdateForm(!showUpdateForm);
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Update Information
+              </button>
+              <button
+                onClick={() => {
+                  setShowUpdateForm(false);
+                  setShowConfirmForm(false);
+                  setShowPasswordForm(!showPasswordForm);
+                }}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Change Password
+              </button>
+              
+            </div>
+
+            {showUpdateForm && (
+              <form className="mt-6 space-y-4 max-w-md">
+                <div>
+                  <label className="block text-gray-700 mb-2">Full Name</label>
+                  <input
+                    type="text"
+                    defaultValue={userInfo.name}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 mb-2">Email</label>
+                  <input
+                    type="email"
+                    defaultValue={userInfo.email}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Save Changes
+                </button>
+              </form>
+            )}
+
+            {showPasswordForm && (
+              <form className="mt-6 space-y-4 max-w-md">
+                <div>
+                  <input
+                    type="password"
+                    placeholder="New Password"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Confirm New Password"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
+                >
+                  Update Password
+                </button>
+              </form>
+            )}
+
+            {showConfirmForm && (
+              <form className="mt-6 space-y-4 max-w-md">
+                <div>
+                  <input
+                    type="password"
+                    placeholder="Current Password"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
+                >
+                  Confirm Password
+                </button>
+              </form>
+            )}
           </div>
         );
 
@@ -162,9 +298,9 @@ const MyAccount = () => {
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <div className="flex items-center space-x-4 mb-6">
                 <img
-                  src="src/assets/user-02.jpg"
+                  src={userInfo.image}
                   alt={userInfo.name}
-                  className="w-16 h-16 rounded-full"
+                  className="w-16 h-16 rounded-full object-cover"
                 />
                 <div>
                   <h3 className="font-semibold">{userInfo.name}</h3>
@@ -218,6 +354,7 @@ const MyAccount = () => {
                   <span>Account Details</span>
                 </button>
                 <button
+                  onClick={handleLogout}
                   className="w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50"
                 >
                   <FaSignOutAlt />

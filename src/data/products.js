@@ -289,5 +289,4 @@ export const testimonials = [
 
 export const storeBadges = {
   appStore: "/images/svg/app-store.svg",
-  playStore: "/images/svg/play-store.svg"
 };
